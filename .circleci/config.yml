@@ -87,7 +87,7 @@ jobs:
       - run:
           name: Test library import
           command: |
-            cat > test-import.mjs << 'EOF'
+            cat > test-import.mjs \<< 'EOF'
             import { autocancel } from './dist/index.js';
             console.log('Library import successful:', typeof autocancel === 'function');
             EOF
