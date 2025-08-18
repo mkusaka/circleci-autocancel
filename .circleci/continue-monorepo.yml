@@ -1,0 +1,213 @@
+version: 2.1
+
+parameters:
+  run-frontend:
+    type: boolean
+    default: false
+  run-backend:
+    type: boolean
+    default: false
+  run-shared:
+    type: boolean
+    default: false
+  run-docs:
+    type: boolean
+    default: false
+  run-all:
+    type: boolean
+    default: false
+
+executors:
+  node:
+    docker:
+      - image: cimg/node:22.18
+
+jobs:
+  # Autocancel job - install from npm and run
+  autocancel:
+    executor: node
+    steps:
+      - run:
+          name: Install and run circleci-autocancel
+          command: |
+            echo "========================================="
+            echo "Installing circleci-autocancel from npm..."
+            echo "========================================="
+            npm install -g circleci-autocancel
+            
+            echo "Running autocancel for workflow: $CIRCLE_WORKFLOW_ID"
+            echo "Pipeline: $CIRCLE_PIPELINE_ID"
+            echo "Branch: $CIRCLE_BRANCH"
+            
+            # Run autocancel with pattern matching for dynamic workflow names
+            circleci-autocancel \
+              --name-pattern "^(frontend|backend|shared|docs|integration)-workflow$" \
+              --verbose \
+              --max-pages 3
+
+  # Frontend jobs
+  frontend-build:
+    executor: node
+    steps:
+      - checkout
+      - run:
+          name: Build frontend
+          command: |
+            echo "Building frontend..."
+            cd packages/frontend
+            # npm install && npm run build
+            sleep 30  # Simulate build time
+
+  frontend-test:
+    executor: node
+    steps:
+      - checkout
+      - run:
+          name: Test frontend
+          command: |
+            echo "Testing frontend..."
+            cd packages/frontend
+            # npm test
+            sleep 20  # Simulate test time
+
+  # Backend jobs
+  backend-build:
+    executor: node
+    steps:
+      - checkout
+      - run:
+          name: Build backend
+          command: |
+            echo "Building backend..."
+            cd packages/backend
+            # npm install && npm run build
+            sleep 30  # Simulate build time
+
+  backend-test:
+    executor: node
+    steps:
+      - checkout
+      - run:
+          name: Test backend
+          command: |
+            echo "Testing backend..."
+            cd packages/backend
+            # npm test
+            sleep 20  # Simulate test time
+
+  # Shared library jobs
+  shared-build:
+    executor: node
+    steps:
+      - checkout
+      - run:
+          name: Build shared library
+          command: |
+            echo "Building shared library..."
+            cd packages/shared
+            # npm install && npm run build
+            sleep 15  # Simulate build time
+
+  # Docs job
+  docs-build:
+    executor: node
+    steps:
+      - checkout
+      - run:
+          name: Build documentation
+          command: |
+            echo "Building documentation..."
+            cd docs
+            # npm run docs:build
+            sleep 10  # Simulate build time
+
+  # Integration tests
+  integration-test:
+    executor: node
+    steps:
+      - checkout
+      - run:
+          name: Run integration tests
+          command: |
+            echo "Running integration tests..."
+            # npm run test:integration
+            sleep 45  # Simulate integration test time
+
+workflows:
+  # Frontend workflow - runs only when frontend changes
+  frontend-workflow:
+    when:
+      or:
+        - << pipeline.parameters.run-frontend >>
+        - << pipeline.parameters.run-all >>
+    jobs:
+      - autocancel:
+          context:
+            - circleci-api
+      - frontend-build:
+          requires:
+            - autocancel
+      - frontend-test:
+          requires:
+            - frontend-build
+
+  # Backend workflow - runs only when backend changes
+  backend-workflow:
+    when:
+      or:
+        - << pipeline.parameters.run-backend >>
+        - << pipeline.parameters.run-all >>
+    jobs:
+      - autocancel:
+          context:
+            - circleci-api
+      - backend-build:
+          requires:
+            - autocancel
+      - backend-test:
+          requires:
+            - backend-build
+
+  # Shared library workflow
+  shared-workflow:
+    when:
+      or:
+        - << pipeline.parameters.run-shared >>
+        - << pipeline.parameters.run-all >>
+    jobs:
+      - autocancel:
+          context:
+            - circleci-api
+      - shared-build:
+          requires:
+            - autocancel
+
+  # Documentation workflow
+  docs-workflow:
+    when:
+      or:
+        - << pipeline.parameters.run-docs >>
+        - << pipeline.parameters.run-all >>
+    jobs:
+      - autocancel:
+          context:
+            - circleci-api
+      - docs-build:
+          requires:
+            - autocancel
+
+  # Integration tests - run when any service changes
+  integration-workflow:
+    when:
+      or:
+        - << pipeline.parameters.run-frontend >>
+        - << pipeline.parameters.run-backend >>
+        - << pipeline.parameters.run-shared >>
+        - << pipeline.parameters.run-all >>
+    jobs:
+      - autocancel:
+          context:
+            - circleci-api
+      - integration-test:
+          requires:
+            - autocancel

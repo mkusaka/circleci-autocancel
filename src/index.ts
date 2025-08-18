@@ -115,40 +115,52 @@ export async function autocancel(
     await sleep(sleepMs);
   }
 
-  if (options.verbose)
-    console.log(`[scan] older pipelines found: ${olderPipelineIds.length}`);
-
   // 4) Find target workflows in older pipelines and cancel running/on_hold ones
   const canceled: string[] = [];
   let matched = 0;
+  let scannedWorkflows = 0;
 
+  // First pass: count cancelable workflows
+  const targetWorkflows: Array<{ pipelineId: string; workflow: any }> = [];
+  
   for (const pid of olderPipelineIds) {
     const wfs = await api.listWorkflowsByPipeline(pid);
+    scannedWorkflows += wfs.items.length;
+    
     const targets = wfs.items.filter(
       (w) => wfPredicate(w.name) && statuses.has(w.status as any),
     );
-
-    matched += targets.length;
-
+    
     for (const w of targets) {
-      if (dryRun) {
-        console.log(
-          `[dry-run] would cancel: wf=${w.id} name="${w.name}" (#${w.pipeline_number})`,
-        );
-      } else {
-        const status = await api.cancelWorkflow(w.id);
-        if (status === 202 || status === 200) {
-          console.log(
-            `[cancelled] wf=${w.id} name="${w.name}" (#${w.pipeline_number})`,
-          );
-          canceled.push(w.id);
-        } else {
-          console.warn(`[warn] cancel failed: wf=${w.id} -> HTTP ${status}`);
-        }
-        await sleep(sleepMs);
-      }
+      targetWorkflows.push({ pipelineId: pid, workflow: w });
     }
+    matched += targets.length;
     await sleep(sleepMs);
+  }
+
+  if (options.verbose) {
+    console.log(`[scan] scanned ${olderPipelineIds.length} pipelines, ${scannedWorkflows} workflows`);
+    console.log(`[scan] found ${matched} ${Array.from(statuses).join('/')} workflows matching pattern`);
+  }
+
+  // Second pass: cancel workflows
+  for (const { workflow: w } of targetWorkflows) {
+    if (dryRun) {
+      console.log(
+        `[dry-run] would cancel: wf=${w.id} name="${w.name}" (#${w.pipeline_number})`,
+      );
+    } else {
+      const status = await api.cancelWorkflow(w.id);
+      if (status === 202 || status === 200) {
+        console.log(
+          `[cancelled] wf=${w.id} name="${w.name}" (#${w.pipeline_number})`,
+        );
+        canceled.push(w.id);
+      } else {
+        console.warn(`[warn] cancel failed: wf=${w.id} -> HTTP ${status}`);
+      }
+      await sleep(sleepMs);
+    }
   }
 
   return {

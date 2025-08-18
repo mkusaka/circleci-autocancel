@@ -73,6 +73,153 @@ circleci-autocancel [options]
   -v, --verbose              Verbose logging
 ```
 
+## CircleCI Configuration Examples
+
+### Basic Setup
+
+Install from npm and run as the first job:
+
+```yaml
+# .circleci/config.yml
+version: 2.1
+
+jobs:
+  autocancel:
+    docker:
+      - image: cimg/node:22.18
+    steps:
+      - run:
+          name: Install and run circleci-autocancel
+          command: |
+            npm install -g circleci-autocancel
+            circleci-autocancel --verbose
+
+  build:
+    docker:
+      - image: cimg/node:22.18
+    steps:
+      - checkout
+      - run: npm install
+      - run: npm test
+
+workflows:
+  main:
+    jobs:
+      - autocancel:
+          context:
+            - circleci-api  # Contains CIRCLECI_TOKEN
+      - build:
+          requires:
+            - autocancel
+```
+
+### Monorepo with Path Filtering
+
+For monorepos using dynamic configuration:
+
+```yaml
+# .circleci/config.yml
+version: 2.1
+setup: true
+
+orbs:
+  path-filtering: circleci/path-filtering@1.1.0
+
+workflows:
+  setup:
+    jobs:
+      - path-filtering/filter:
+          mapping: |
+            packages/frontend/.* run-frontend true
+            packages/backend/.*  run-backend true
+            packages/shared/.*   run-shared true
+          base-revision: main
+          config-path: .circleci/continue.yml
+```
+
+```yaml
+# .circleci/continue.yml
+version: 2.1
+
+parameters:
+  run-frontend:
+    type: boolean
+    default: false
+  run-backend:
+    type: boolean
+    default: false
+  run-shared:
+    type: boolean
+    default: false
+
+jobs:
+  autocancel:
+    docker:
+      - image: cimg/node:22.18
+    steps:
+      - run:
+          name: Autocancel redundant workflows
+          command: |
+            npm install -g circleci-autocancel
+            # Match all dynamic workflow names with regex
+            circleci-autocancel \
+              --name-pattern "^(frontend|backend|shared)-workflow$" \
+              --verbose
+
+workflows:
+  frontend-workflow:
+    when: << pipeline.parameters.run-frontend >>
+    jobs:
+      - autocancel:
+          context: [circleci-api]
+      - frontend-build:
+          requires: [autocancel]
+      - frontend-test:
+          requires: [frontend-build]
+
+  backend-workflow:
+    when: << pipeline.parameters.run-backend >>
+    jobs:
+      - autocancel:
+          context: [circleci-api]
+      - backend-build:
+          requires: [autocancel]
+      - backend-test:
+          requires: [backend-build]
+```
+
+### Complex Example with Multiple Conditions
+
+For workflows that need to cancel specific patterns:
+
+```yaml
+jobs:
+  smart-autocancel:
+    docker:
+      - image: cimg/node:22.18
+    steps:
+      - run:
+          name: Smart autocancel
+          command: |
+            npm install -g circleci-autocancel
+            
+            # Cancel only workflows matching specific patterns
+            # and preserve certain critical workflows
+            if [[ "$CIRCLE_BRANCH" == "main" ]]; then
+              # On main branch, only cancel same workflow type
+              circleci-autocancel \
+                --workflow-name "$CIRCLE_WORKFLOW_NAME" \
+                --max-pages 5 \
+                --verbose
+            else
+              # On feature branches, cancel all workflows
+              circleci-autocancel \
+                --name-pattern ".*" \
+                --max-pages 3 \
+                --verbose
+            fi
+```
+
 ### Library API
 
 ```ts

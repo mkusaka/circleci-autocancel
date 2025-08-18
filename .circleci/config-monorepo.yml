@@ -1,0 +1,20 @@
+version: 2.1
+setup: true
+
+orbs:
+  path-filtering: circleci/path-filtering@1.1.0
+
+workflows:
+  setup:
+    jobs:
+      # Path filtering to detect which parts of monorepo changed
+      - path-filtering/filter:
+          name: check-updated-modules
+          mapping: |
+            packages/frontend/.* run-frontend true
+            packages/backend/.*  run-backend true
+            packages/shared/.*   run-shared true
+            docs/.*              run-docs true
+            .circleci/.*         run-all true
+          base-revision: main
+          config-path: .circleci/continue-monorepo.yml
