@@ -1,0 +1,75 @@
+{
+  "name": "circleci-autocancel",
+  "version": "0.0.0",
+  "description": "Cancel redundant CircleCI workflows on the same branch (works on default branch, too).",
+  "license": "MIT",
+  "author": "Masatomo Kusaka",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mkusaka/circleci-autocancel.git"
+  },
+  "homepage": "https://github.com/mkusaka/circleci-autocancel#readme",
+  "bugs": {
+    "url": "https://github.com/mkusaka/circleci-autocancel/issues"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "types": "dist/index.d.ts",
+  "bin": {
+    "circleci-autocancel": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist coverage",
+    "test": "vitest run --coverage",
+    "dev:test": "vitest",
+    "lint": "oxlint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "verify": "pnpm run typecheck && pnpm run lint && pnpm run format:check && pnpm test",
+    "prepublishOnly": "pnpm run clean && pnpm run verify && pnpm run build",
+    "preversion": "pnpm run verify",
+    "version": "pnpm run format && git add -A src test",
+    "postversion": "git push && git push --tags",
+    "release": "pnpm version",
+    "release:patch": "pnpm version patch",
+    "release:minor": "pnpm version minor",
+    "release:major": "pnpm version major",
+    "publish:dry": "pnpm publish --dry-run --no-git-checks"
+  },
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "dependencies": {
+    "commander": "^12.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.4",
+    "@vitest/coverage-v8": "^2.1.3",
+    "oxlint": "^0.15.2",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.3"
+  },
+  "keywords": [
+    "circleci",
+    "ci",
+    "autocancel",
+    "workflow",
+    "cancel",
+    "cli"
+  ],
+  "packageManager": "pnpm@9.15.2"
+}
