@@ -42,7 +42,7 @@ jobs:
       - run:
           name: Start slow job
           command: |
-            echo "Starting slow job at $(date)"
+            echo "Starting slow job at $(date) - TEST AUTOCANCEL"
             echo "This job will run for 60 seconds to test autocancel..."
             echo "Pipeline: $CIRCLE_PIPELINE_ID"
             echo "Workflow: $CIRCLE_WORKFLOW_ID"
