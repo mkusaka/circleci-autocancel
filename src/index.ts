@@ -148,6 +148,8 @@ export async function autocancel(
   }
 
   // Second pass: cancel workflows
+  const cancelledDetails: Array<{ id: string; name: string; pipelineNumber: number }> = [];
+  
   for (const { workflow: w } of targetWorkflows) {
     if (dryRun) {
       console.log(
@@ -160,11 +162,22 @@ export async function autocancel(
           `[cancelled] wf=${w.id} name="${w.name}" (#${w.pipeline_number})`,
         );
         canceled.push(w.id);
+        cancelledDetails.push({ id: w.id, name: w.name, pipelineNumber: w.pipeline_number });
       } else {
         console.warn(`[warn] cancel failed: wf=${w.id} -> HTTP ${status}`);
       }
       await sleep(sleepMs);
     }
+  }
+  
+  // Print summary
+  if (cancelledDetails.length > 0) {
+    console.log(`\n[summary] Cancelled ${cancelledDetails.length} workflow(s):`);
+    for (const detail of cancelledDetails) {
+      console.log(`  - ${detail.name} (#${detail.pipelineNumber}) [${detail.id}]`);
+    }
+  } else if (!dryRun) {
+    console.log(`\n[summary] No workflows were cancelled`);
   }
 
   return {
