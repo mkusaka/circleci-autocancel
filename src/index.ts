@@ -122,15 +122,15 @@ export async function autocancel(
 
   // First pass: count cancelable workflows
   const targetWorkflows: Array<{ pipelineId: string; workflow: any }> = [];
-  
+
   for (const pid of olderPipelineIds) {
     const wfs = await api.listWorkflowsByPipeline(pid);
     scannedWorkflows += wfs.items.length;
-    
+
     const targets = wfs.items.filter(
       (w) => wfPredicate(w.name) && statuses.has(w.status as any),
     );
-    
+
     for (const w of targets) {
       targetWorkflows.push({ pipelineId: pid, workflow: w });
     }
@@ -139,8 +139,12 @@ export async function autocancel(
   }
 
   if (options.verbose) {
-    console.log(`[scan] scanned ${olderPipelineIds.length} pipelines, ${scannedWorkflows} workflows`);
-    console.log(`[scan] found ${matched} ${Array.from(statuses).join('/')} workflows matching pattern`);
+    console.log(
+      `[scan] scanned ${olderPipelineIds.length} pipelines, ${scannedWorkflows} workflows`,
+    );
+    console.log(
+      `[scan] found ${matched} ${Array.from(statuses).join("/")} workflows matching pattern`,
+    );
   }
 
   // Second pass: cancel workflows

@@ -107,7 +107,7 @@ workflows:
     jobs:
       - autocancel:
           context:
-            - circleci-api  # Contains CIRCLECI_TOKEN
+            - circleci-api # Contains CIRCLECI_TOKEN
       - build:
           requires:
             - autocancel
@@ -202,7 +202,7 @@ jobs:
           name: Smart autocancel
           command: |
             npm install -g circleci-autocancel
-            
+
             # Cancel only workflows matching specific patterns
             # and preserve certain critical workflows
             if [[ "$CIRCLE_BRANCH" == "main" ]]; then

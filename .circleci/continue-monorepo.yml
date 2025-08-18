@@ -34,11 +34,11 @@ jobs:
             echo "Installing circleci-autocancel from npm..."
             echo "========================================="
             npm install -g circleci-autocancel
-            
+
             echo "Running autocancel for workflow: $CIRCLE_WORKFLOW_ID"
             echo "Pipeline: $CIRCLE_PIPELINE_ID"
             echo "Branch: $CIRCLE_BRANCH"
-            
+
             # Run autocancel with pattern matching for dynamic workflow names
             circleci-autocancel \
               --name-pattern "^(frontend|backend|shared|docs|integration)-workflow$" \
