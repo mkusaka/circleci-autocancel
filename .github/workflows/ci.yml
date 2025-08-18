@@ -57,9 +57,22 @@ jobs:
       - name: Check formatting
         run: pnpm run format:check
 
+  circleci-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install CircleCI CLI
+        run: |
+          curl -fLSs https://raw.githubusercontent.com/CircleCI-Public/circleci-cli/master/install.sh | bash
+          echo "export PATH=$PATH:$HOME/.local/bin" >> $GITHUB_ENV
+          
+      - name: Validate CircleCI config
+        run: circleci config validate .circleci/config.yml
+
   publish-dry-run:
     runs-on: ubuntu-latest
-    needs: [test, format]
+    needs: [test, format, circleci-config]
     if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
