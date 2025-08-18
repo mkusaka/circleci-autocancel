@@ -95,14 +95,14 @@ jobs:
 
 workflows:
   version: 2
-  
+
   test_and_build:
     jobs:
       # Run autocancel first to cancel any redundant workflows
       - autocancel:
-          context: 
-            - circleci-api  # Expects CIRCLECI_TOKEN in context
-      
+          context:
+            - circleci-api # Expects CIRCLECI_TOKEN in context
+
       # Then run the actual tests in parallel
       - test:
           requires:
