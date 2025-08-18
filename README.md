@@ -161,9 +161,8 @@ jobs:
           name: Autocancel redundant workflows
           command: |
             npm install -g circleci-autocancel
-            # Match all dynamic workflow names with regex
+            # Each workflow will only cancel its own type
             circleci-autocancel \
-              --name-pattern "^(frontend|backend|shared)-workflow$" \
               --verbose
 
 workflows:

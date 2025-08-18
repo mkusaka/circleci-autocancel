@@ -39,9 +39,8 @@ jobs:
             echo "Pipeline: $CIRCLE_PIPELINE_ID"
             echo "Branch: $CIRCLE_BRANCH"
 
-            # Run autocancel with pattern matching for dynamic workflow names
+            # Run autocancel - will use current workflow name by default
             circleci-autocancel \
-              --name-pattern "^(frontend|backend|shared|docs|integration)-workflow$" \
               --verbose \
               --max-pages 3
 
