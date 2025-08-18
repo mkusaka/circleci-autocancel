@@ -1,6 +1,6 @@
 {
   "name": "circleci-autocancel",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Cancel redundant CircleCI workflows on the same branch (works on default branch, too).",
   "license": "MIT",
   "author": "Masatomo Kusaka",
