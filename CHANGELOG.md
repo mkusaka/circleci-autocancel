@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.2] - 2025-08-19
+
+### Added
+
+- Detailed summary of cancelled workflows showing names and pipeline numbers
+- Debug output with workflow scanning metrics
+- CircleCI configuration examples for monorepo setups with path-filtering orb
+- Support for path-filtering orb v2.0.2
+
+### Fixed
+
+- Path-filtering orb version updated to v2.0.2 to fix Python compatibility issues
+- Each workflow type now only cancels its own type (no cross-workflow cancellation)
+
+### Changed
+
+- Improved logging to show running/on_hold counts instead of generic pipeline counts
+- Enhanced README with comprehensive CircleCI configuration examples
+
+## [0.0.1] - 2025-08-18
+
 ### Added
 
 - Initial release of circleci-autocancel
