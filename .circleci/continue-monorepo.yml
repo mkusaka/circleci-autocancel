@@ -38,11 +38,16 @@ jobs:
             echo "Running autocancel for workflow: $CIRCLE_WORKFLOW_ID"
             echo "Pipeline: $CIRCLE_PIPELINE_ID"
             echo "Branch: $CIRCLE_BRANCH"
+            echo "Current workflow name: ${CIRCLE_WORKFLOW_NAME:-unknown}"
+            echo "========================================="
 
             # Run autocancel - will use current workflow name by default
-            circleci-autocancel \
+            DEBUG=* circleci-autocancel \
               --verbose \
               --max-pages 3
+            
+            echo "========================================="
+            echo "Autocancel completed"
 
   # Frontend jobs
   frontend-build:
