@@ -24,118 +24,47 @@ jobs:
           name: Build project
           command: pnpm run build
       - run:
-          name: Test autocancel in dry-run mode
+          name: Run autocancel
           command: |
-            echo "Testing autocancel with dry-run..."
-            node dist/cli.js --dry-run --verbose || echo "Expected to fail without proper env vars"
-      - run:
-          name: Run autocancel (actual)
-          command: |
-            echo "Running autocancel for real..."
+            echo "========================================="
+            echo "Running autocancel for workflow: $CIRCLE_WORKFLOW_ID"
+            echo "Pipeline: $CIRCLE_PIPELINE_ID"
+            echo "Branch: $CIRCLE_BRANCH"
+            echo "========================================="
             # This will cancel older workflows on the same branch
-            node dist/cli.js --verbose --max-pages 2 --sleep-ms 200 || true
-      # Save the built package for other jobs
-      - persist_to_workspace:
-          root: .
-          paths:
-            - dist
-            - node_modules
+            node dist/cli.js --verbose --max-pages 3 --sleep-ms 500 || true
 
-  test:
+  slow_job:
     executor: node
     steps:
       - checkout
-      - attach_workspace:
-          at: .
       - run:
-          name: Run tests
-          command: pnpm test
-
-  lint:
-    executor: node
-    steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - run:
-          name: Run linter
-          command: pnpm run lint
-      - run:
-          name: Check formatting
-          command: pnpm run format:check
-
-  typecheck:
-    executor: node
-    steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - run:
-          name: Type check
-          command: pnpm run typecheck
-
-  integration_test:
-    executor: node
-    steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - run:
-          name: Test CLI help
+          name: Start slow job
           command: |
-            node dist/cli.js --help
+            echo "Starting slow job at $(date)"
+            echo "This job will run for 60 seconds..."
+            echo "Pipeline: $CIRCLE_PIPELINE_ID"
+            echo "Workflow: $CIRCLE_WORKFLOW_ID"
       - run:
-          name: Test library import
+          name: Simulate long-running task
           command: |
-            cat > test-import.mjs \<< 'EOF'
-            import { autocancel } from './dist/index.js';
-            console.log('Library import successful:', typeof autocancel === 'function');
-            EOF
-            node test-import.mjs
+            for i in {1..60}; do
+              echo "Progress: $i/60 seconds..."
+              sleep 1
+            done
+            echo "Slow job completed at $(date)"
 
 workflows:
   version: 2
 
-  test_and_build:
+  autocancel_test:
     jobs:
       # Run autocancel first to cancel any redundant workflows
       - autocancel:
           context:
             - circleci-api # Expects CIRCLECI_TOKEN in context
-
-      # Then run the actual tests in parallel
-      - test:
+      
+      # Then run a slow job that can be cancelled
+      - slow_job:
           requires:
             - autocancel
-      - lint:
-          requires:
-            - autocancel
-      - typecheck:
-          requires:
-            - autocancel
-      - integration_test:
-          requires:
-            - autocancel
-
-  # Workflow to test multiple pushes (for autocancel testing)
-  test_multiple_pushes:
-    jobs:
-      - autocancel:
-          context:
-            - circleci-api
-          filters:
-            branches:
-              only:
-                - main
-                - develop
-                - /feature\/.*/
-      - test:
-          requires:
-            - autocancel
-          # Add artificial delay to make workflows longer (for testing autocancel)
-          post-steps:
-            - run:
-                name: Artificial delay for testing
-                command: |
-                  echo "Simulating long-running job..."
-                  sleep 30
