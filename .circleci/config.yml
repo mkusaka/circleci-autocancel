@@ -32,7 +32,8 @@ jobs:
             echo "Branch: $CIRCLE_BRANCH"
             echo "========================================="
             # This will cancel older workflows on the same branch
-            node dist/cli.js --verbose --max-pages 3 --sleep-ms 500 || true
+            # Using debug mode for detailed logging
+            DEBUG=* node dist/cli.js --verbose --max-pages 3 --sleep-ms 500 || true
 
   slow_job:
     executor: node
