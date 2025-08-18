@@ -30,10 +30,49 @@ jobs:
             echo "Running autocancel for workflow: $CIRCLE_WORKFLOW_ID"
             echo "Pipeline: $CIRCLE_PIPELINE_ID"
             echo "Branch: $CIRCLE_BRANCH"
+            echo "Project: $CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME"
             echo "========================================="
+            
+            # Debug: Check if token is set
+            if [ -z "$CIRCLECI_TOKEN" ]; then
+              echo "ERROR: CIRCLECI_TOKEN is not set in context!"
+              exit 1
+            fi
+            
+            # Test API access
+            echo "Testing API access..."
+            curl -s -o /dev/null -w "%{http_code}" \
+              -H "Circle-Token: $CIRCLECI_TOKEN" \
+              "https://circleci.com/api/v2/pipeline/$CIRCLE_PIPELINE_ID" || true
+            echo ""
+            
             # This will cancel older workflows on the same branch
-            # Using debug mode for detailed logging
-            DEBUG=* node dist/cli.js --verbose --max-pages 3 --sleep-ms 500 || true
+            # Remove || true to fail on error
+            DEBUG=* node dist/cli.js --verbose --max-pages 3 --sleep-ms 500
+
+  test_api:
+    executor: node
+    steps:
+      - run:
+          name: Test CircleCI API Access
+          command: |
+            echo "Testing CircleCI API access..."
+            echo "Token present: $([ -z "$CIRCLECI_TOKEN" ] && echo "NO" || echo "YES")"
+            
+            # Test 1: Get current user
+            echo -e "\n1. Testing /me endpoint:"
+            curl -H "Circle-Token: $CIRCLECI_TOKEN" \
+              "https://circleci.com/api/v2/me" | jq '.'
+            
+            # Test 2: Get current pipeline
+            echo -e "\n2. Testing pipeline endpoint:"
+            curl -H "Circle-Token: $CIRCLECI_TOKEN" \
+              "https://circleci.com/api/v2/pipeline/$CIRCLE_PIPELINE_ID" | jq '.'
+            
+            # Test 3: Get project pipelines
+            echo -e "\n3. Testing project pipelines:"
+            curl -H "Circle-Token: $CIRCLECI_TOKEN" \
+              "https://circleci.com/api/v2/project/gh/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/pipeline?branch=$CIRCLE_BRANCH" | jq '.items[0]'
 
   slow_job:
     executor: node
@@ -60,10 +99,17 @@ workflows:
 
   autocancel_test:
     jobs:
-      # Run autocancel first to cancel any redundant workflows
-      - autocancel:
+      # Test API access first
+      - test_api:
           context:
             - circleci-api # Expects CIRCLECI_TOKEN in context
+      
+      # Run autocancel to cancel any redundant workflows
+      - autocancel:
+          context:
+            - circleci-api
+          requires:
+            - test_api
       
       # Then run a slow job that can be cancelled
       - slow_job:
