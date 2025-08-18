@@ -187,6 +187,52 @@ workflows:
           requires: [backend-build]
 ```
 
+### Global Autocancel in Setup Workflow
+
+Cancel ALL old workflows during setup phase (useful for monorepos):
+
+```yaml
+# .circleci/config.yml with global autocancel
+version: 2.1
+setup: true
+
+orbs:
+  path-filtering: circleci/path-filtering@2.0.2
+
+jobs:
+  global-autocancel:
+    docker:
+      - image: cimg/node:22.18
+    steps:
+      - run:
+          name: Cancel ALL old workflows
+          command: |
+            npm install -g circleci-autocancel
+            # Cancel ALL workflow types with regex
+            circleci-autocancel \
+              --name-pattern ".*" \
+              --verbose \
+              --max-pages 5
+
+workflows:
+  setup:
+    jobs:
+      - global-autocancel:
+          context: [circleci-api]
+      - path-filtering/filter:
+          requires: [global-autocancel]
+          config-path: .circleci/continue.yml
+```
+
+**Pros:**
+- Single cancellation point for all workflows
+- Ensures clean slate before new workflows start
+- Simpler configuration
+
+**Cons:**
+- May cancel workflows from different features/PRs on same branch
+- Less granular control
+
 ### Complex Example with Multiple Conditions
 
 For workflows that need to cancel specific patterns:

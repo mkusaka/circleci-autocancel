@@ -1,0 +1,61 @@
+version: 2.1
+setup: true
+
+orbs:
+  path-filtering: circleci/path-filtering@2.0.2
+
+executors:
+  node:
+    docker:
+      - image: cimg/node:22.18
+
+jobs:
+  # Smart autocancel - different strategies based on branch
+  smart-autocancel:
+    executor: node
+    steps:
+      - run:
+          name: Smart autocancel based on branch
+          command: |
+            echo "========================================="
+            echo "Smart autocancel for branch: $CIRCLE_BRANCH"
+            echo "========================================="
+            npm install -g circleci-autocancel
+            
+            if [[ "$CIRCLE_BRANCH" == "main" || "$CIRCLE_BRANCH" == "master" ]]; then
+              echo "On default branch - cancelling only setup workflows"
+              circleci-autocancel \
+                --workflow-name "setup" \
+                --verbose \
+                --max-pages 3
+            else
+              echo "On feature branch - cancelling ALL old workflows"
+              circleci-autocancel \
+                --name-pattern ".*" \
+                --verbose \
+                --max-pages 5
+            fi
+            
+            echo "Smart autocancel completed"
+
+workflows:
+  setup:
+    jobs:
+      # Smart autocancel based on branch type
+      - smart-autocancel:
+          context:
+            - circleci-api
+      
+      # Then proceed with path filtering
+      - path-filtering/filter:
+          name: check-updated-modules
+          requires:
+            - smart-autocancel
+          mapping: |
+            packages/frontend/.* run-frontend true
+            packages/backend/.*  run-backend true
+            packages/shared/.*   run-shared true
+            docs/.*              run-docs true
+            .circleci/.*         run-all true
+          base-revision: main
+          config-path: .circleci/continue-monorepo.yml

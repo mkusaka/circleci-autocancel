@@ -1,0 +1,53 @@
+version: 2.1
+setup: true
+
+orbs:
+  path-filtering: circleci/path-filtering@2.0.2
+
+executors:
+  node:
+    docker:
+      - image: cimg/node:22.18
+
+jobs:
+  # Global autocancel - cancels ALL old workflows on the same branch
+  global-autocancel:
+    executor: node
+    steps:
+      - run:
+          name: Install and run global autocancel
+          command: |
+            echo "========================================="
+            echo "Global autocancel - cancelling ALL old workflows"
+            echo "========================================="
+            npm install -g circleci-autocancel
+            
+            # Cancel ALL workflow types with regex pattern
+            circleci-autocancel \
+              --name-pattern ".*" \
+              --verbose \
+              --max-pages 5
+            
+            echo "Global autocancel completed"
+
+workflows:
+  setup:
+    jobs:
+      # First, cancel ALL old workflows globally
+      - global-autocancel:
+          context:
+            - circleci-api
+      
+      # Then proceed with path filtering
+      - path-filtering/filter:
+          name: check-updated-modules
+          requires:
+            - global-autocancel
+          mapping: |
+            packages/frontend/.* run-frontend true
+            packages/backend/.*  run-backend true
+            packages/shared/.*   run-shared true
+            docs/.*              run-docs true
+            .circleci/.*         run-all true
+          base-revision: main
+          config-path: .circleci/continue-monorepo.yml
