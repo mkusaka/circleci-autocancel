@@ -45,7 +45,7 @@ jobs:
             DEBUG=* circleci-autocancel \
               --verbose \
               --max-pages 3
-            
+
             echo "========================================="
             echo "Autocancel completed"
 
