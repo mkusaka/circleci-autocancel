@@ -67,7 +67,7 @@ export async function autocancel(
   const maxPages = options.maxPages ?? 3;
   const dryRun = Boolean(options.dryRun);
   const sleepMs = options.sleepMs ?? 120;
-  const statuses = new Set<(typeof DEFAULT_STATUSES)[number]>(
+  const statuses = new Set<string>(
     options.statuses ?? [...DEFAULT_STATUSES],
   );
 
@@ -141,8 +141,22 @@ export async function autocancel(
     const wfs = await api.listWorkflowsByPipeline(pid);
     scannedWorkflows += wfs.items.length;
 
+    if (options.verbose && wfs.items.length > 0) {
+      console.log(`[scan] pipeline ${pid} has ${wfs.items.length} workflow(s):`);
+      for (const w of wfs.items) {
+        const nameMatch = wfPredicate(w.name);
+        const statusMatch = statuses.has(w.status);
+        const symbol = nameMatch && statusMatch ? "✓" : "✗";
+        console.log(
+          `  ${symbol} ${w.name} (${w.status})${
+            !nameMatch ? " - name mismatch" : ""
+          }${!statusMatch ? " - status not targeted" : ""}`,
+        );
+      }
+    }
+
     const targets = wfs.items.filter(
-      (w) => wfPredicate(w.name) && statuses.has(w.status as any),
+      (w) => wfPredicate(w.name) && statuses.has(w.status),
     );
 
     for (const w of targets) {
