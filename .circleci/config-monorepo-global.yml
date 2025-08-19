@@ -14,16 +14,23 @@ jobs:
   global-autocancel:
     executor: node
     steps:
+      - checkout
       - run:
-          name: Install and run global autocancel
+          name: Install pnpm
+          command: |
+            corepack enable
+            corepack prepare pnpm@latest --activate
+      - run:
+          name: Build and run global autocancel
           command: |
             echo "========================================="
             echo "Global autocancel - cancelling ALL old workflows"
             echo "========================================="
-            npm install -g circleci-autocancel
+            pnpm install --frozen-lockfile
+            pnpm run build
 
             # Cancel ALL workflow types with regex pattern
-            circleci-autocancel \
+            node dist/cli.js \
               --name-pattern ".*" \
               --verbose \
               --max-pages 5

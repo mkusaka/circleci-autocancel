@@ -14,23 +14,30 @@ jobs:
   smart-autocancel:
     executor: node
     steps:
+      - checkout
       - run:
-          name: Smart autocancel based on branch
+          name: Install pnpm
+          command: |
+            corepack enable
+            corepack prepare pnpm@latest --activate
+      - run:
+          name: Build and run smart autocancel
           command: |
             echo "========================================="
             echo "Smart autocancel for branch: $CIRCLE_BRANCH"
             echo "========================================="
-            npm install -g circleci-autocancel
+            pnpm install --frozen-lockfile
+            pnpm run build
 
             if [[ "$CIRCLE_BRANCH" == "main" || "$CIRCLE_BRANCH" == "master" ]]; then
               echo "On default branch - cancelling only setup workflows"
-              circleci-autocancel \
+              node dist/cli.js \
                 --workflow-name "setup" \
                 --verbose \
                 --max-pages 3
             else
               echo "On feature branch - cancelling ALL old workflows"
-              circleci-autocancel \
+              node dist/cli.js \
                 --name-pattern ".*" \
                 --verbose \
                 --max-pages 5

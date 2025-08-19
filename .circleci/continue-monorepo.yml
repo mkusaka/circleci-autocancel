@@ -23,17 +23,24 @@ executors:
       - image: cimg/node:22.18
 
 jobs:
-  # Autocancel job - install from npm and run
+  # Autocancel job - use development code
   autocancel:
     executor: node
     steps:
+      - checkout
       - run:
-          name: Install and run circleci-autocancel
+          name: Install pnpm
+          command: |
+            corepack enable
+            corepack prepare pnpm@latest --activate
+      - run:
+          name: Build and run circleci-autocancel from source
           command: |
             echo "========================================="
-            echo "Installing circleci-autocancel from npm..."
+            echo "Building circleci-autocancel from source..."
             echo "========================================="
-            npm install -g circleci-autocancel
+            pnpm install --frozen-lockfile
+            pnpm run build
 
             echo "Running autocancel for workflow: $CIRCLE_WORKFLOW_ID"
             echo "Pipeline: $CIRCLE_PIPELINE_ID"
@@ -41,8 +48,8 @@ jobs:
             echo "Current workflow name: ${CIRCLE_WORKFLOW_NAME:-unknown}"
             echo "========================================="
 
-            # Run autocancel - will use current workflow name by default
-            DEBUG=* circleci-autocancel \
+            # Run autocancel from built source
+            DEBUG=* node dist/cli.js \
               --verbose \
               --max-pages 3
 
