@@ -12,6 +12,14 @@
 - Safe `--dry-run` mode to preview what would be cancelled
 - Available as both CLI tool and library API
 
+## How It Works
+
+1. **Targets same branch only**: Only cancels workflows on the same branch as the current build
+2. **Scans recent pipelines**: By default, scans up to 3 pages of pipelines (approximately 60-90 pipelines)
+3. **Filters older pipelines**: Only targets pipelines with numbers lower than the current pipeline
+4. **Cancels running/on_hold workflows**: Only affects active workflows, not completed ones
+5. **Respects workflow names**: By default, only cancels workflows with the same name as the current workflow
+
 ## Installation
 
 ```bash
@@ -65,10 +73,12 @@ circleci-autocancel [options]
   -b, --branch <name>        Resolved from pipeline if omitted
       --workflow-name <name> Override current workflow name
       --name-pattern <regex> Regex pattern for workflow names (overrides --workflow-name)
-      --max-pages <n>        Max pipeline pages to scan (default 3)
+      --max-pages <n>        Max pipeline pages to scan (default: 3)
+                             Each page contains ~20-30 pipelines
+                             Use higher values for busy branches
       --statuses <csv>       e.g. running,on_hold (default)
-      --sleep-ms <n>         API call delay in ms (default 120)
-      --api-base <url>       API base URL (default https://circleci.com/api/v2)
+      --sleep-ms <n>         API call delay in ms (default: 120)
+      --api-base <url>       API base URL (default: https://circleci.com/api/v2)
   -n, --dry-run              Log only, don't cancel
   -v, --verbose              Verbose logging
 ```
