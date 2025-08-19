@@ -225,11 +225,13 @@ workflows:
 ```
 
 **Pros:**
+
 - Single cancellation point for all workflows
 - Ensures clean slate before new workflows start
 - Simpler configuration
 
 **Cons:**
+
 - May cancel workflows from different features/PRs on same branch
 - Less granular control
 

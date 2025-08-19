@@ -21,7 +21,7 @@ jobs:
             echo "Smart autocancel for branch: $CIRCLE_BRANCH"
             echo "========================================="
             npm install -g circleci-autocancel
-            
+
             if [[ "$CIRCLE_BRANCH" == "main" || "$CIRCLE_BRANCH" == "master" ]]; then
               echo "On default branch - cancelling only setup workflows"
               circleci-autocancel \
@@ -35,7 +35,7 @@ jobs:
                 --verbose \
                 --max-pages 5
             fi
-            
+
             echo "Smart autocancel completed"
 
 workflows:
@@ -45,7 +45,7 @@ workflows:
       - smart-autocancel:
           context:
             - circleci-api
-      
+
       # Then proceed with path filtering
       - path-filtering/filter:
           name: check-updated-modules

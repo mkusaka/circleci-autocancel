@@ -21,13 +21,13 @@ jobs:
             echo "Global autocancel - cancelling ALL old workflows"
             echo "========================================="
             npm install -g circleci-autocancel
-            
+
             # Cancel ALL workflow types with regex pattern
             circleci-autocancel \
               --name-pattern ".*" \
               --verbose \
               --max-pages 5
-            
+
             echo "Global autocancel completed"
 
 workflows:
@@ -37,7 +37,7 @@ workflows:
       - global-autocancel:
           context:
             - circleci-api
-      
+
       # Then proceed with path filtering
       - path-filtering/filter:
           name: check-updated-modules
