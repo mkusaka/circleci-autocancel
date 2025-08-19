@@ -30,6 +30,20 @@ async function sleep(ms: number) {
   if (ms > 0) await new Promise((r) => setTimeout(r, ms));
 }
 
+function buildWorkflowUrl(
+  projectSlug: string,
+  pipelineNumber: number,
+  workflowId: string,
+): string {
+  // projectSlug is like "gh/org/repo" or "github/org/repo"
+  const parts = projectSlug.split("/");
+  if (parts.length !== 3) {
+    return `workflow:${workflowId}`;
+  }
+  const [vcs, org, repo] = parts;
+  return `https://app.circleci.com/pipelines/${vcs}/${org}/${repo}/${pipelineNumber}/workflows/${workflowId}`;
+}
+
 export async function autocancel(
   options: AutocancelOptions = {},
 ): Promise<AutocancelReport> {
@@ -152,6 +166,7 @@ export async function autocancel(
     id: string;
     name: string;
     pipelineNumber: number;
+    url: string;
   }> = [];
 
   for (const { workflow: w } of targetWorkflows) {
@@ -170,6 +185,7 @@ export async function autocancel(
           id: w.id,
           name: w.name,
           pipelineNumber: w.pipeline_number,
+          url: buildWorkflowUrl(projectSlug, w.pipeline_number, w.id),
         });
       } else {
         console.warn(`[warn] cancel failed: wf=${w.id} -> HTTP ${status}`);
@@ -184,9 +200,8 @@ export async function autocancel(
       `\n[summary] Cancelled ${cancelledDetails.length} workflow(s):`,
     );
     for (const detail of cancelledDetails) {
-      console.log(
-        `  - ${detail.name} (#${detail.pipelineNumber}) [${detail.id}]`,
-      );
+      console.log(`  - ${detail.name} (#${detail.pipelineNumber})`);
+      console.log(`    ${detail.url}`);
     }
   } else if (!dryRun) {
     console.log(`\n[summary] No workflows were cancelled`);

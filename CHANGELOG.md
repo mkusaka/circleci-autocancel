@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Workflow URLs in cancellation summary for easy access to cancelled workflows
+
 ## [0.0.2] - 2025-08-19
 
 ### Added
