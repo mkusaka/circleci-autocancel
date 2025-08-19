@@ -1,2 +1,2 @@
-// Test 3: Frontend workflow B (should cancel frontend A)
-console.log("frontend");
+// Test URL display in summary
+console.log("frontend - test URL display");
