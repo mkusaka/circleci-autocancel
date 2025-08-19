@@ -1,2 +1,2 @@
-// Test 4: Backend workflow B (should cancel backend A)
-console.log("backend");
+// Test URL display with development code  
+console.log("backend - test URL display");
