@@ -285,6 +285,7 @@ jobs:
 Use `--workflow-name` or `--workflow-name-pattern` when you want to preserve certain workflows:
 
 #### Example 1: Cancel only the same workflow type
+
 ```yaml
 # Useful when you have multiple independent workflows (test, deploy, docs, etc.)
 # and want each to only cancel its own type
@@ -297,6 +298,7 @@ Use `--workflow-name` or `--workflow-name-pattern` when you want to preserve cer
 ```
 
 #### Example 2: Cancel specific workflow patterns
+
 ```yaml
 # Cancel all test-related workflows
 - run:
@@ -316,6 +318,7 @@ Use `--workflow-name` or `--workflow-name-pattern` when you want to preserve cer
 ```
 
 #### Example 3: Setup workflow with dynamic configuration
+
 ```yaml
 # In a setup workflow that generates dynamic configs
 - run:
@@ -328,6 +331,7 @@ Use `--workflow-name` or `--workflow-name-pattern` when you want to preserve cer
 ```
 
 #### Example 4: Preserve critical workflows
+
 ```yaml
 # Cancel everything except production deployments
 - run:

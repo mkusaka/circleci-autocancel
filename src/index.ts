@@ -116,8 +116,8 @@ export async function autocancel(
     const pattern = options.workflowNamePattern
       ? options.workflowNamePattern
       : options.workflowName
-      ? `(exact: ${options.workflowName})`
-      : "(all workflows)";
+        ? `(exact: ${options.workflowName})`
+        : "(all workflows)";
     console.log(
       `[context] slug=${projectSlug} branch=${branch} wf="${currentWorkflowName}" curNo=${currentNumber} pattern=${pattern}`,
     );
