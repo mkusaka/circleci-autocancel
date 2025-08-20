@@ -97,18 +97,29 @@ export async function autocancel(
   const currentNumber = curWf.pipeline_number;
   const currentWorkflowName = options.workflowName ?? curWf.name;
 
-  // Workflow name filtering logic (--name-pattern takes precedence)
+  // Workflow name filtering logic
+  // Priority: workflowNamePattern > workflowName > all workflows (default)
   const wfPredicate = (() => {
     if (options.workflowNamePattern) {
       const re = new RegExp(options.workflowNamePattern);
       return (name: string) => re.test(name);
     }
-    return (name: string) => name === currentWorkflowName;
+    if (options.workflowName) {
+      const targetName = options.workflowName;
+      return (name: string) => name === targetName;
+    }
+    // Default: target all workflows (like CircleCI's auto-cancel)
+    return (_name: string) => true;
   })();
 
   if (options.verbose) {
+    const pattern = options.workflowNamePattern
+      ? options.workflowNamePattern
+      : options.workflowName
+      ? `(exact: ${options.workflowName})`
+      : "(all workflows)";
     console.log(
-      `[context] slug=${projectSlug} branch=${branch} wf="${currentWorkflowName}" curNo=${currentNumber} pattern=${options.workflowNamePattern ?? "(exact)"}`,
+      `[context] slug=${projectSlug} branch=${branch} wf="${currentWorkflowName}" curNo=${currentNumber} pattern=${pattern}`,
     );
   }
 

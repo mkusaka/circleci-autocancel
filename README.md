@@ -18,7 +18,9 @@
 2. **Scans recent pipelines**: By default, scans up to 3 pages of pipelines (approximately 60-90 pipelines)
 3. **Filters older pipelines**: Only targets pipelines with numbers lower than the current pipeline
 4. **Cancels running/on_hold workflows**: Only affects active workflows, not completed ones
-5. **Respects workflow names**: By default, only cancels workflows with the same name as the current workflow
+5. **Default behavior**: Cancels ALL workflows on the same branch (like CircleCI's native auto-cancel)
+   - Use `--workflow-name` to target specific workflow name
+   - Use `--workflow-name-pattern` for regex matching
 
 ## Installation
 
@@ -66,21 +68,24 @@ workflows:
 
 ```
 circleci-autocancel [options]
-  -t, --token <token>        Token (defaults to env)
-  -p, --pipeline-id <id>     Pipeline ID (defaults to env)
-  -w, --workflow-id <id>     Workflow ID (defaults to env)
-      --project-slug <slug>  e.g. gh/org/repo (resolved from pipeline if omitted)
-  -b, --branch <name>        Resolved from pipeline if omitted
-      --workflow-name <name> Override current workflow name
-      --name-pattern <regex> Regex pattern for workflow names (overrides --workflow-name)
-      --max-pages <n>        Max pipeline pages to scan (default: 3)
-                             Each page contains ~20-30 pipelines
-                             Use higher values for busy branches
-      --statuses <csv>       e.g. running,on_hold (default)
-      --sleep-ms <n>         API call delay in ms (default: 120)
-      --api-base <url>       API base URL (default: https://circleci.com/api/v2)
-  -n, --dry-run              Log only, don't cancel
-  -v, --verbose              Verbose logging
+  -t, --token <token>              Token (defaults to env)
+  -p, --pipeline-id <id>           Pipeline ID (defaults to env)
+  -w, --workflow-id <id>           Workflow ID (defaults to env)
+      --project-slug <slug>        e.g. gh/org/repo (resolved from pipeline if omitted)
+  -b, --branch <name>              Resolved from pipeline if omitted
+      --workflow-name <name>       Target specific workflow name only
+      --workflow-name-pattern <re> Regex pattern for workflow names (overrides --workflow-name)
+      --max-pages <n>              Max pipeline pages to scan (default: 3)
+                                   Each page contains ~20-30 pipelines
+                                   Use higher values for busy branches
+      --statuses <csv>             e.g. running,on_hold (default)
+      --sleep-ms <n>               API call delay in ms (default: 120)
+      --api-base <url>             API base URL (default: https://circleci.com/api/v2)
+  -n, --dry-run                    Log only, don't cancel
+  -v, --verbose                    Verbose logging
+
+Note: By default, ALL workflows on the same branch are cancelled (like CircleCI's native auto-cancel).
+Use --workflow-name or --workflow-name-pattern to target specific workflows only.
 ```
 
 ## CircleCI Configuration Examples
@@ -218,9 +223,8 @@ jobs:
           name: Cancel ALL old workflows
           command: |
             npm install -g circleci-autocancel
-            # Cancel ALL workflow types with regex
+            # Default behavior: cancels ALL workflows
             circleci-autocancel \
-              --name-pattern ".*" \
               --verbose \
               --max-pages 5
 
@@ -269,12 +273,69 @@ jobs:
                 --max-pages 5 \
                 --verbose
             else
-              # On feature branches, cancel all workflows
+              # On feature branches, cancel all workflows (default behavior)
               circleci-autocancel \
-                --name-pattern ".*" \
                 --max-pages 3 \
                 --verbose
             fi
+```
+
+### Targeting Specific Workflows
+
+Use `--workflow-name` or `--workflow-name-pattern` when you want to preserve certain workflows:
+
+#### Example 1: Cancel only the same workflow type
+```yaml
+# Useful when you have multiple independent workflows (test, deploy, docs, etc.)
+# and want each to only cancel its own type
+- run:
+    name: Cancel only same workflow type
+    command: |
+      circleci-autocancel \
+        --workflow-name "$CIRCLE_WORKFLOW_NAME" \
+        --verbose
+```
+
+#### Example 2: Cancel specific workflow patterns
+```yaml
+# Cancel all test-related workflows
+- run:
+    name: Cancel test workflows
+    command: |
+      circleci-autocancel \
+        --workflow-name-pattern "^test-.*" \
+        --verbose
+
+# Cancel build and deploy workflows but keep monitoring/alerts running
+- run:
+    name: Cancel build/deploy workflows
+    command: |
+      circleci-autocancel \
+        --workflow-name-pattern "^(build|deploy).*" \
+        --verbose
+```
+
+#### Example 3: Setup workflow with dynamic configuration
+```yaml
+# In a setup workflow that generates dynamic configs
+- run:
+    name: Cancel old setup workflows only
+    command: |
+      # Only cancel other setup workflows, not the generated ones
+      circleci-autocancel \
+        --workflow-name "setup" \
+        --verbose
+```
+
+#### Example 4: Preserve critical workflows
+```yaml
+# Cancel everything except production deployments
+- run:
+    name: Cancel non-critical workflows
+    command: |
+      circleci-autocancel \
+        --workflow-name-pattern "^(?!production-deploy).*" \
+        --verbose
 ```
 
 ### Library API

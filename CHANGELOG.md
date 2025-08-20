@@ -7,9 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### BREAKING CHANGES
+
+- **Default behavior changed**: Now cancels ALL workflows on the same branch by default (matching CircleCI's native auto-cancel behavior)
+  - Previously: Only cancelled workflows with the same name
+  - Now: Cancels all workflows unless `--workflow-name` or `--workflow-name-pattern` is specified
+- **CLI option renamed**: `--name-pattern` is now `--workflow-name-pattern` for clarity
+
 ### Added
 
 - Workflow URLs in cancellation summary for easy access to cancelled workflows
+- Verbose logging shows each scanned workflow with match status
 
 ## [0.0.2] - 2025-08-19
 

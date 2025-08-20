@@ -34,7 +34,7 @@ program
     "Exact workflow name to match (default: current workflow name)",
   )
   .option(
-    "--name-pattern <regex>",
+    "--workflow-name-pattern <regex>",
     "Regex to match workflow names (overrides --workflow-name)",
   )
   .option(
@@ -65,7 +65,7 @@ program
         projectSlug: opts.projectSlug,
         branch: opts.branch,
         workflowName: opts.workflowName,
-        workflowNamePattern: opts.namePattern,
+        workflowNamePattern: opts.workflowNamePattern,
         maxPages: opts.maxPages,
         dryRun: Boolean(opts.dryRun),
         statuses: opts.statuses,

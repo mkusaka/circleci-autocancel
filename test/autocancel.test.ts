@@ -25,7 +25,7 @@ describe("autocancel", () => {
     process.env.CIRCLECI_TOKEN = "token";
   });
 
-  it("cancels running/on_hold workflows of older pipelines (exact-name)", async () => {
+  it("cancels all running/on_hold workflows of older pipelines by default", async () => {
     // 1) GET /pipeline/pipe-cur
     const pipelineGet: PipelineGet = {
       id: "pipe-cur",
@@ -146,8 +146,8 @@ describe("autocancel", () => {
 
     const report = await autocancel({ sleepMs: 0, verbose: true });
     expect(report.scannedPipelines).toBe(2);
-    expect(report.matchedWorkflows).toBe(2);
-    expect(report.canceledWorkflows.length).toBe(2);
+    expect(report.matchedWorkflows).toBe(3); // Now matches all workflows by default
+    expect(report.canceledWorkflows.length).toBe(2); // wf-41-b returns 500 error
     expect(fetchMock).toHaveBeenCalled();
   });
 
