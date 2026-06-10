@@ -65,7 +65,7 @@
     "@vitest/coverage-v8": "2.1.9",
     "oxfmt": "0.53.0",
     "oxlint": "0.15.15",
-    "typescript": "5.9.2",
+    "typescript": "6.0.3",
     "vitest": "2.1.9"
   },
   "engines": {
