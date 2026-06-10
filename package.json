@@ -64,7 +64,7 @@
     "@types/node": "22.17.2",
     "@vitest/coverage-v8": "2.1.9",
     "oxfmt": "0.53.0",
-    "oxlint": "0.15.15",
+    "oxlint": "1.68.0",
     "typescript": "6.0.3",
     "vitest": "2.1.9"
   },
