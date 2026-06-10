@@ -1,10 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { autocancel } from "../src/index.js";
-import type {
-  PipelinesList,
-  WorkflowsList,
-  PipelineGet,
-} from "../src/types.js";
+import type { PipelinesList, WorkflowsList, PipelineGet } from "../src/types.js";
 
 // Simple HTTP mock
 function jsonResponse(obj: unknown, status = 200) {
@@ -93,56 +89,35 @@ describe("autocancel", () => {
       ],
     };
 
-    const fetchMock = vi
-      .spyOn(globalThis, "fetch")
-      .mockImplementation(async (input, init) => {
-        const url = typeof input === "string" ? input : (input as Request).url;
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
+      const url = typeof input === "string" ? input : (input as Request).url;
 
-        if (
-          url === `${API}/pipeline/pipe-cur` &&
-          (!init?.method || init.method === "GET")
-        ) {
-          return jsonResponse(pipelineGet);
-        }
-        if (
-          url === `${API}/pipeline/pipe-cur/workflow` &&
-          (!init?.method || init.method === "GET")
-        ) {
-          return jsonResponse(curWfs);
-        }
-        if (
-          url ===
-            `${API}/project/${encodeURIComponent("gh/org/repo")}/pipeline?branch=main` &&
-          (!init?.method || init.method === "GET")
-        ) {
-          return jsonResponse(list1);
-        }
-        if (
-          url === `${API}/pipeline/pipe-41/workflow` &&
-          (!init?.method || init.method === "GET")
-        ) {
-          return jsonResponse(w41);
-        }
-        if (
-          url === `${API}/pipeline/pipe-39/workflow` &&
-          (!init?.method || init.method === "GET")
-        ) {
-          return jsonResponse(w39);
-        }
-        if (
-          url === `${API}/workflow/wf-41-a/cancel` &&
-          init?.method === "POST"
-        ) {
-          return new Response(null, { status: 202 });
-        }
-        if (
-          url === `${API}/workflow/wf-39-a/cancel` &&
-          init?.method === "POST"
-        ) {
-          return new Response(null, { status: 202 });
-        }
-        return new Response("not mocked", { status: 500 });
-      });
+      if (url === `${API}/pipeline/pipe-cur` && (!init?.method || init.method === "GET")) {
+        return jsonResponse(pipelineGet);
+      }
+      if (url === `${API}/pipeline/pipe-cur/workflow` && (!init?.method || init.method === "GET")) {
+        return jsonResponse(curWfs);
+      }
+      if (
+        url === `${API}/project/${encodeURIComponent("gh/org/repo")}/pipeline?branch=main` &&
+        (!init?.method || init.method === "GET")
+      ) {
+        return jsonResponse(list1);
+      }
+      if (url === `${API}/pipeline/pipe-41/workflow` && (!init?.method || init.method === "GET")) {
+        return jsonResponse(w41);
+      }
+      if (url === `${API}/pipeline/pipe-39/workflow` && (!init?.method || init.method === "GET")) {
+        return jsonResponse(w39);
+      }
+      if (url === `${API}/workflow/wf-41-a/cancel` && init?.method === "POST") {
+        return new Response(null, { status: 202 });
+      }
+      if (url === `${API}/workflow/wf-39-a/cancel` && init?.method === "POST") {
+        return new Response(null, { status: 202 });
+      }
+      return new Response("not mocked", { status: 500 });
+    });
 
     const report = await autocancel({ sleepMs: 0, verbose: true });
     expect(report.scannedPipelines).toBe(2);
@@ -159,9 +134,7 @@ describe("autocancel", () => {
       vcs: { branch: "main" },
     };
     const curWfs: WorkflowsList = {
-      items: [
-        { id: "wf-cur", name: "wf", status: "running", pipeline_number: 10 },
-      ],
+      items: [{ id: "wf-cur", name: "wf", status: "running", pipeline_number: 10 }],
     };
     const list1: PipelinesList = {
       items: [
@@ -174,31 +147,20 @@ describe("autocancel", () => {
       ],
     };
     const w9: WorkflowsList = {
-      items: [
-        { id: "wf-9-a", name: "wf", status: "running", pipeline_number: 9 },
-      ],
+      items: [{ id: "wf-9-a", name: "wf", status: "running", pipeline_number: 9 }],
     };
 
     const postSpy = vi.fn();
 
     vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
       const url = typeof input === "string" ? input : (input as Request).url;
-      if (
-        url.endsWith("/pipeline/pipe-cur") &&
-        (!init?.method || init.method === "GET")
-      )
+      if (url.endsWith("/pipeline/pipe-cur") && (!init?.method || init.method === "GET"))
         return jsonResponse(pipelineGet);
-      if (
-        url.endsWith("/pipeline/pipe-cur/workflow") &&
-        (!init?.method || init.method === "GET")
-      )
+      if (url.endsWith("/pipeline/pipe-cur/workflow") && (!init?.method || init.method === "GET"))
         return jsonResponse(curWfs);
       if (url.includes("/project/") && url.includes("/pipeline?branch="))
         return jsonResponse(list1);
-      if (
-        url.endsWith("/pipeline/pipe-9/workflow") &&
-        (!init?.method || init.method === "GET")
-      )
+      if (url.endsWith("/pipeline/pipe-9/workflow") && (!init?.method || init.method === "GET"))
         return jsonResponse(w9);
       if (url.endsWith("/cancel") && init?.method === "POST") {
         postSpy();
@@ -267,16 +229,11 @@ describe("autocancel", () => {
     vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
       const url = typeof input === "string" ? input : (input as Request).url;
       if (url.endsWith("/pipeline/pipe-cur")) return jsonResponse(pipelineGet);
-      if (url.endsWith("/pipeline/pipe-cur/workflow"))
-        return jsonResponse(curWfs);
+      if (url.endsWith("/pipeline/pipe-cur/workflow")) return jsonResponse(curWfs);
       if (url.includes("/project/") && url.includes("/pipeline?branch="))
         return jsonResponse(list1);
       if (url.endsWith("/pipeline/pipe-99/workflow")) return jsonResponse(w99);
-      if (
-        url.includes("/workflow/") &&
-        url.endsWith("/cancel") &&
-        init?.method === "POST"
-      ) {
+      if (url.includes("/workflow/") && url.endsWith("/cancel") && init?.method === "POST") {
         cancelled.push(url);
         return new Response(null, { status: 202 });
       }

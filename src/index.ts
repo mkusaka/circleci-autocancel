@@ -1,9 +1,5 @@
 import { CircleCIApi } from "./circleci.js";
-import type {
-  AutocancelOptions,
-  AutocancelReport,
-  WorkflowsList,
-} from "./types.js";
+import type { AutocancelOptions, AutocancelReport, WorkflowsList } from "./types.js";
 
 const DEFAULT_STATUSES = ["running", "on_hold"] as const;
 
@@ -30,11 +26,7 @@ async function sleep(ms: number) {
   if (ms > 0) await new Promise((r) => setTimeout(r, ms));
 }
 
-function buildWorkflowUrl(
-  projectSlug: string,
-  pipelineNumber: number,
-  workflowId: string,
-): string {
+function buildWorkflowUrl(projectSlug: string, pipelineNumber: number, workflowId: string): string {
   // projectSlug is like "gh/org/repo" or "github/org/repo"
   const parts = projectSlug.split("/");
   if (parts.length !== 3) {
@@ -44,25 +36,16 @@ function buildWorkflowUrl(
   return `https://app.circleci.com/pipelines/${vcs}/${org}/${repo}/${pipelineNumber}/workflows/${workflowId}`;
 }
 
-export async function autocancel(
-  options: AutocancelOptions = {},
-): Promise<AutocancelReport> {
+export async function autocancel(options: AutocancelOptions = {}): Promise<AutocancelReport> {
   const token = pickToken(options.token);
-  const api = new CircleCIApi(
-    token,
-    options.apiBase ?? "https://circleci.com/api/v2",
-  );
+  const api = new CircleCIApi(token, options.apiBase ?? "https://circleci.com/api/v2");
 
   const currentPipelineId = options.pipelineId ?? env("CIRCLE_PIPELINE_ID");
   const currentWorkflowId = options.workflowId ?? env("CIRCLE_WORKFLOW_ID");
   if (!currentPipelineId)
-    throw new Error(
-      "Missing pipeline id. Provide --pipeline-id or set CIRCLE_PIPELINE_ID.",
-    );
+    throw new Error("Missing pipeline id. Provide --pipeline-id or set CIRCLE_PIPELINE_ID.");
   if (!currentWorkflowId)
-    throw new Error(
-      "Missing workflow id. Provide --workflow-id or set CIRCLE_WORKFLOW_ID.",
-    );
+    throw new Error("Missing workflow id. Provide --workflow-id or set CIRCLE_WORKFLOW_ID.");
 
   const maxPages = options.maxPages ?? 3;
   const dryRun = Boolean(options.dryRun);
@@ -87,8 +70,7 @@ export async function autocancel(
     );
 
   // 2) Get current workflow name and current pipeline number
-  const curWfs: WorkflowsList =
-    await api.listWorkflowsByPipeline(currentPipelineId);
+  const curWfs: WorkflowsList = await api.listWorkflowsByPipeline(currentPipelineId);
   const curWf = curWfs.items.find((w) => w.id === currentWorkflowId);
   if (!curWf)
     throw new Error(
@@ -151,9 +133,7 @@ export async function autocancel(
     scannedWorkflows += wfs.items.length;
 
     if (options.verbose && wfs.items.length > 0) {
-      console.log(
-        `[scan] pipeline ${pid} has ${wfs.items.length} workflow(s):`,
-      );
+      console.log(`[scan] pipeline ${pid} has ${wfs.items.length} workflow(s):`);
       for (const w of wfs.items) {
         const nameMatch = wfPredicate(w.name);
         const statusMatch = statuses.has(w.status);
@@ -166,9 +146,7 @@ export async function autocancel(
       }
     }
 
-    const targets = wfs.items.filter(
-      (w) => wfPredicate(w.name) && statuses.has(w.status),
-    );
+    const targets = wfs.items.filter((w) => wfPredicate(w.name) && statuses.has(w.status));
 
     for (const w of targets) {
       targetWorkflows.push({ pipelineId: pid, workflow: w });
@@ -196,15 +174,11 @@ export async function autocancel(
 
   for (const { workflow: w } of targetWorkflows) {
     if (dryRun) {
-      console.log(
-        `[dry-run] would cancel: wf=${w.id} name="${w.name}" (#${w.pipeline_number})`,
-      );
+      console.log(`[dry-run] would cancel: wf=${w.id} name="${w.name}" (#${w.pipeline_number})`);
     } else {
       const status = await api.cancelWorkflow(w.id);
       if (status === 202 || status === 200) {
-        console.log(
-          `[cancelled] wf=${w.id} name="${w.name}" (#${w.pipeline_number})`,
-        );
+        console.log(`[cancelled] wf=${w.id} name="${w.name}" (#${w.pipeline_number})`);
         canceled.push(w.id);
         cancelledDetails.push({
           id: w.id,
@@ -221,9 +195,7 @@ export async function autocancel(
 
   // Print summary
   if (cancelledDetails.length > 0) {
-    console.log(
-      `\n[summary] Cancelled ${cancelledDetails.length} workflow(s):`,
-    );
+    console.log(`\n[summary] Cancelled ${cancelledDetails.length} workflow(s):`);
     for (const detail of cancelledDetails) {
       console.log(`  - ${detail.name} (#${detail.pipelineNumber})`);
       console.log(`    ${detail.url}`);

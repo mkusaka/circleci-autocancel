@@ -7,7 +7,7 @@ test/
 .gitignore
 tsconfig.json
 vitest.config.ts
-.prettierrc*
+.oxfmtrc*
 .eslintrc*
 
 # Development files

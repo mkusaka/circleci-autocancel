@@ -31,7 +31,7 @@ Thank you for your interest in contributing!
 - `pnpm run test` - Run tests with coverage
 - `pnpm run dev:test` - Run tests in watch mode
 - `pnpm run lint` - Run linter
-- `pnpm run format` - Format code with prettier
+- `pnpm run format` - Format code with oxfmt
 - `pnpm run typecheck` - Type check without building
 - `pnpm run verify` - Run all checks (typecheck, lint, format, test)
 
@@ -49,7 +49,7 @@ Releases are automated via GitHub Actions when a version tag is pushed:
 
 ## Code Style
 
-- We use Prettier for code formatting
+- We use oxfmt for code formatting
 - We use oxlint for linting
 - TypeScript strict mode is enabled
 

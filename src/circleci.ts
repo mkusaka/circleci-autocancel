@@ -18,9 +18,7 @@ export class CircleCIApi {
       headers: this.headers(),
     });
     if (!res.ok)
-      throw new Error(
-        `GET pipeline ${pipelineId} -> HTTP ${res.status}: ${await res.text()}`,
-      );
+      throw new Error(`GET pipeline ${pipelineId} -> HTTP ${res.status}: ${await res.text()}`);
     return res.json() as Promise<PipelineGet>;
   }
 
@@ -38,10 +36,7 @@ export class CircleCIApi {
         headers: this.headers(),
       },
     );
-    if (!res.ok)
-      throw new Error(
-        `LIST pipelines -> HTTP ${res.status}: ${await res.text()}`,
-      );
+    if (!res.ok) throw new Error(`LIST pipelines -> HTTP ${res.status}: ${await res.text()}`);
     return res.json() as Promise<PipelinesList>;
   }
 
