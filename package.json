@@ -58,7 +58,7 @@
     "publish:dry": "pnpm publish --dry-run --no-git-checks"
   },
   "dependencies": {
-    "commander": "^12.1.0"
+    "commander": "^15.0.0"
   },
   "devDependencies": {
     "@types/node": "22.17.2",
