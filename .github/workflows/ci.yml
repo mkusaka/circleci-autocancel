@@ -134,7 +134,7 @@ jobs:
           curl -sSfL -o /tmp/circleci-cli-checksums.txt "https://github.com/CircleCI-Public/circleci-cli/releases/download/v${CIRCLECI_CLI_VERSION}/circleci-cli_${CIRCLECI_CLI_VERSION}_checksums.txt"
           (cd /tmp && grep "  ${archive}$" circleci-cli-checksums.txt | sha256sum -c -)
           tar -xzf "/tmp/${archive}" -C /tmp
-          sudo install -m 0755 /tmp/circleci /usr/local/bin/circleci
+          sudo install -m 0755 "/tmp/circleci-cli_${CIRCLECI_CLI_VERSION}_linux_amd64/circleci" /usr/local/bin/circleci
           circleci version
         shell: bash
 
