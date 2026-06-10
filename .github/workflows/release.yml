@@ -1,0 +1,120 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions: {}
+
+env:
+  # renovate: datasource=npm depName=npm versioning=npm
+  NPM_VERSION: "11.16.0"
+
+jobs:
+  release:
+    name: Stage npm package and create GitHub release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - name: Validate release tag
+        run: |
+          if [[ ! "${GITHUB_REF_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Release tags must be full semver tags like v1.2.3."
+            exit 1
+          fi
+
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.16.0
+          registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Set up npm for staged publishing
+        run: npm install -g "npm@${NPM_VERSION}"
+
+      - name: Check npm staged publishing support
+        run: |
+          INSTALLED_NPM_VERSION=$(npm --version)
+          echo "npm ${INSTALLED_NPM_VERSION}"
+          NPM_VERSION="$INSTALLED_NPM_VERSION" node -e "const [major, minor] = process.env.NPM_VERSION.split('.').map(Number); if (major < 11 || (major === 11 && minor < 15)) { throw new Error('npm 11.15.0 or later is required for npm stage publish'); }"
+
+      - name: Validate package version
+        id: package
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          PACKAGE_NAME=$(node -p "JSON.parse(require('node:fs').readFileSync('package.json', 'utf8')).name")
+          PACKAGE_VERSION=$(node -p "JSON.parse(require('node:fs').readFileSync('package.json', 'utf8')).version")
+
+          if [[ -z "$PACKAGE_NAME" || -z "$PACKAGE_VERSION" ]]; then
+            echo "::error::Could not read package name/version from package.json"
+            exit 1
+          fi
+
+          if [[ "$TAG_VERSION" != "$PACKAGE_VERSION" ]]; then
+            echo "::error::Tag version ($TAG_VERSION) must match package.json version ($PACKAGE_VERSION)"
+            exit 1
+          fi
+
+          if npm view "${PACKAGE_NAME}@${PACKAGE_VERSION}" version >/dev/null 2>&1; then
+            echo "::error::${PACKAGE_NAME}@${PACKAGE_VERSION} is already published on npm."
+            exit 1
+          fi
+
+          {
+            echo "name=$PACKAGE_NAME"
+            echo "version=$PACKAGE_VERSION"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Ensure GitHub release does not already exist
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          release_draft="$(gh release view "${GITHUB_REF_NAME}" --json isDraft --jq '.isDraft' 2>/dev/null || true)"
+          if [[ "$release_draft" == "false" ]]; then
+            echo "::error::GitHub Release ${GITHUB_REF_NAME} already exists. Cut a new version tag."
+            exit 1
+          fi
+          if [[ "$release_draft" == "true" ]]; then
+            echo "::error::Draft GitHub Release ${GITHUB_REF_NAME} already exists. Delete it or use a new version tag."
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Stage package on npm
+        run: npm stage publish --access public
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --verify-tag \
+            --title "${{ steps.package.outputs.name }} ${GITHUB_REF_NAME}" \
+            --generate-notes
+
+      - name: Add release summary
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<EOF
+          ## Release staged
+
+          - GitHub Release: ${GITHUB_REF_NAME}
+          - npm package: ${{ steps.package.outputs.name }}@${{ steps.package.outputs.version }}
+
+          The npm package was submitted with \`npm stage publish\`.
+          Approve the staged package on npmjs.com with 2FA to make it publicly available.
+          EOF
