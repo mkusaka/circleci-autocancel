@@ -1,0 +1,4 @@
+interface:
+  display_name: "npm Staged Release"
+  short_description: "Release npm packages through staged publishing"
+  default_prompt: "Use $npm-staged-release to cut and verify a staged npm release."
