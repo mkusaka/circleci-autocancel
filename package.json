@@ -1,6 +1,6 @@
 {
   "name": "circleci-autocancel",
-  "version": "0.0.6",
+  "version": "0.0.7-rc.0",
   "description": "Cancel redundant CircleCI workflows on the same branch (works on default branch, too).",
   "keywords": [
     "autocancel",
