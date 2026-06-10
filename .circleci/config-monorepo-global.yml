@@ -7,7 +7,7 @@ orbs:
 executors:
   node:
     docker:
-      - image: cimg/node:22.18
+      - image: cimg/node:22.18.0@sha256:64ceff316e55ef43f35db465d4c98bff8dc862a7f348ed784b91e7d956d34d38
 
 jobs:
   # Global autocancel - cancels ALL old workflows on the same branch
