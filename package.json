@@ -21,7 +21,7 @@
     "url": "git+https://github.com/mkusaka/circleci-autocancel.git"
   },
   "bin": {
-    "circleci-autocancel": "./dist/cli.js"
+    "circleci-autocancel": "dist/cli.js"
   },
   "files": [
     "dist",
