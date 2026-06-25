@@ -61,7 +61,7 @@
     "commander": "^15.0.0"
   },
   "devDependencies": {
-    "@types/node": "22.19.21",
+    "@types/node": "24.13.2",
     "@vitest/coverage-v8": "4.1.9",
     "oxfmt": "0.55.0",
     "oxlint": "1.70.0",
