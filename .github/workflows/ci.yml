@@ -129,7 +129,7 @@ jobs:
       - name: Install CircleCI CLI
         env:
           # renovate: datasource=github-releases depName=CircleCI-Public/circleci-cli
-          CIRCLECI_CLI_VERSION: "0.1.38646"
+          CIRCLECI_CLI_VERSION: "1.0.48254"
         run: |
           set -euo pipefail
 
