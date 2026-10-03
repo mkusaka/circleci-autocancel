@@ -9,7 +9,7 @@ permissions: {}
 
 env:
   # renovate: datasource=npm depName=npm versioning=npm
-  NPM_VERSION: "12.1.0"
+  NPM_VERSION: "12.2.0"
 
 jobs:
   release:
